@@ -1,8 +1,7 @@
-# Ride & Run Tracker (Deliverable 5)
+# Ride & Run Tracker
 
 A small web application for logging cycling and running activities.
 **Language:** JavaScript (Node.js). **Backend:** Express. **Database:** SQLite (`run_ride.db`).
-**Frontend:** one HTML page with plain JavaScript and Tailwind CSS (loaded from a CDN, so an internet connection is needed to see the styling).
 
 ## Requirements
 
@@ -13,20 +12,17 @@ A small web application for logging cycling and running activities.
 
 ```bash
 npm install
-npm start
+node server.js
 ```
 
-Then open **http://localhost:3000** in a browser. Stop the server with Ctrl+C (the database connection is closed cleanly).
-
-> Run `npm start`, not `node start`.
-> If `npm install` shows a `node-gyp` error, delete any `package-lock.json` in this folder and run it again.
+Then open **<http://localhost:3000>** in a browser. Stop the server with Ctrl+C (the database connection is closed cleanly).
 
 ## Database configuration
 
 No configuration is needed. The app opens `run_ride.db` in this folder, and no passwords or keys are involved.
 To use another file, set `DB_PATH` (for example `DB_PATH=/tmp/test.db npm start`).
 
-To recreate the database from the submitted backend files (this replaces all current data with the sample data):
+To recreate the database from the submitted backend files:
 
 ```bash
 npm run reset
@@ -65,14 +61,6 @@ when the server starts, so that file is the only place the query SQL lives.
 | `/api/queries/7` | Subquery (goal progress) |
 | `/api/queries/8` | Set operation, EXCEPT (registered but never completed) |
 | `/api/queries/9` | View (gear closest to retirement) |
-
-## Input validation and errors
-
-- All SQL with user-supplied values uses `?` placeholders or named parameters. No SQL is built from user input.
-- The server checks required fields, sport, positive distance and duration, heart rate range, valid date,
-  and that the gear and device belong to the chosen athlete and the gear type matches the sport.
-- Not-found, duplicate, constraint and foreign-key errors come back as short readable messages (shown in a banner at the top of the page), never as stack traces.
-- Foreign keys are enforced (`PRAGMA foreign_keys = ON`).
 
 ## Files
 
