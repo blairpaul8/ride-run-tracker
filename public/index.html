@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ride &amp; Run Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+  <header class="bg-slate-900 text-white">
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-6 px-4 py-3">
+      <h1 class="text-lg font-semibold">Ride &amp; Run Tracker</h1>
+      <nav class="flex gap-4 text-sm">
+        <button data-show="reports" class="nav hover:text-emerald-300">Reports</button>
+        <button data-show="activities" class="nav hover:text-emerald-300">Activities</button>
+        <button data-show="gear" class="nav hover:text-emerald-300">Gear</button>
+        <button data-show="result" class="nav hover:text-emerald-300">Event result</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-5xl space-y-4 p-4">
+    <p id="message" class="hidden rounded-md px-4 py-2 text-sm"></p>
+
+    <!-- REPORTS: the 9 queries from queries.sql -->
+    <section id="reports" class="space-y-4">
+      <div id="query-buttons" class="flex flex-wrap gap-2"></div>
+      <div class="rounded-lg bg-white p-4 shadow">
+        <h2 id="query-title" class="font-semibold"></h2>
+        <p id="query-desc" class="mb-3 text-sm text-slate-500"></p>
+        <div id="query-table" class="overflow-x-auto"></div>
+      </div>
+    </section>
+
+    <!-- ACTIVITIES: browse, delete, add -->
+    <section id="activities" class="hidden space-y-4">
+      <form id="filter-form" class="flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow">
+        <label class="text-sm">Athlete <select name="athlete_id" class="athlete-select block rounded border p-1.5" data-any="All"></select></label>
+        <label class="text-sm">Sport
+          <select name="sport" class="block rounded border p-1.5">
+            <option value="">Both</option><option value="cycling">Cycling</option><option value="running">Running</option>
+          </select></label>
+        <button class="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white">Filter</button>
+      </form>
+      <div class="overflow-x-auto rounded-lg bg-white p-4 shadow" id="activity-table"></div>
+
+      <form id="add-form" class="grid gap-3 rounded-lg bg-white p-4 shadow sm:grid-cols-3">
+        <h2 class="font-semibold sm:col-span-3">Add an activity</h2>
+        <label class="text-sm">Athlete <select name="athlete_id" required class="athlete-select block w-full rounded border p-1.5" data-form="add-form"></select></label>
+        <label class="text-sm">Sport
+          <select name="sport" class="block w-full rounded border p-1.5">
+            <option value="cycling">Cycling</option><option value="running">Running</option>
+          </select></label>
+        <label class="text-sm">Start (UTC) <input name="start_time" type="datetime-local" required class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Distance (km) <input name="distance_km" type="number" step="any" min="0" required class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Duration (minutes) <input name="duration_min" type="number" step="any" min="0" required class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Avg heart rate <input name="avg_hr" type="number" min="1" class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Gear <select name="gear_id" class="block w-full rounded border p-1.5"></select></label>
+        <label class="text-sm">Device <select name="device_id" class="block w-full rounded border p-1.5"></select></label>
+        <label class="text-sm">Notes <input name="notes" class="block w-full rounded border p-1.5"></label>
+        <button class="rounded bg-emerald-600 px-3 py-2 text-sm text-white sm:col-span-3">Save activity</button>
+      </form>
+    </section>
+
+    <!-- GEAR: list and retire -->
+    <section id="gear" class="hidden space-y-4">
+      <div class="rounded-lg bg-white p-4 shadow">
+        <label class="text-sm">Athlete <select id="gear-athlete" class="athlete-select rounded border p-1.5"></select></label>
+        <div id="gear-table" class="mt-3 overflow-x-auto"></div>
+      </div>
+    </section>
+
+    <!-- EVENT RESULT: transaction -->
+    <section id="result" class="hidden">
+      <form id="result-form" class="grid gap-3 rounded-lg bg-white p-4 shadow sm:grid-cols-3">
+        <h2 class="font-semibold sm:col-span-3">Record an event result</h2>
+        <p class="text-sm text-slate-500 sm:col-span-3">Saves the activity and marks the athlete's registration as completed. Both happen together or not at all.</p>
+        <label class="text-sm">Athlete <select name="athlete_id" required class="athlete-select block w-full rounded border p-1.5" data-form="result-form"></select></label>
+        <label class="text-sm">Event <select name="event_id" required class="block w-full rounded border p-1.5" id="event-select"></select></label>
+        <label class="text-sm">Start (UTC) <input name="start_time" type="datetime-local" required class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Distance (km) <input name="distance_km" type="number" step="any" min="0" required class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Finish time (minutes) <input name="duration_min" type="number" step="any" min="0" required class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Overall placement <input name="placement" type="number" min="1" class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Avg heart rate <input name="avg_hr" type="number" min="1" class="block w-full rounded border p-1.5"></label>
+        <label class="text-sm">Gear <select name="gear_id" class="block w-full rounded border p-1.5"></select></label>
+        <label class="text-sm">Device <select name="device_id" class="block w-full rounded border p-1.5"></select></label>
+        <button class="rounded bg-emerald-600 px-3 py-2 text-sm text-white sm:col-span-3">Save result</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    // Calls the API; throws an Error carrying the server's message if something went wrong.
+    async function api(path, method = 'GET', body) {
+      const res = await fetch('/api' + path, {
+        method,
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      return data;
+    }
+
+    function say(text, isError) {
+      const el = $('#message');
+      el.textContent = text;
+      el.className = 'rounded-md px-4 py-2 text-sm ' + (isError ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-800');
+      setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    // Runs an action and shows any error as a message instead of crashing.
+    async function run(fn) {
+      try { await fn(); } catch (err) { say(err.message, true); }
+    }
+
+    // rows: array of objects. extra: optional function(row) returning HTML for an extra last column.
+    function table(rows, extraHeader, extra) {
+      if (!rows.length) return '<p class="text-sm italic text-slate-500">No rows.</p>';
+      const keys = Object.keys(rows[0]);
+      const head = keys.map((k) => `<th class="px-2 py-1 text-left text-xs uppercase text-slate-500">${esc(k.replace(/_/g, ' '))}</th>`).join('')
+        + (extra ? `<th>${extraHeader}</th>` : '');
+      const body = rows.map((r) => '<tr class="border-t">'
+        + keys.map((k) => `<td class="whitespace-nowrap px-2 py-1">${r[k] === null ? '—' : esc(r[k])}</td>`).join('')
+        + (extra ? `<td class="px-2 py-1">${extra(r)}</td>` : '') + '</tr>').join('');
+      return `<table class="min-w-full text-sm"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function fill(select, items, valueKey, labelKey, blank) {
+      select.innerHTML = (blank !== undefined ? `<option value="">${blank}</option>` : '')
+        + items.map((i) => `<option value="${i[valueKey]}">${esc(i[labelKey])}</option>`).join('');
+    }
+
+    // ---------------------------------------------------------------- navigation
+    function show(name) {
+      for (const s of ['reports', 'activities', 'gear', 'result']) $('#' + s).classList.toggle('hidden', s !== name);
+    }
+    document.querySelectorAll('[data-show]').forEach((b) => b.addEventListener('click', () => show(b.dataset.show)));
+
+    // ------------------------------------------------------------------- reports
+    async function loadQuery(id) {
+      const q = state.queries.find((x) => x.id === id);
+      $('#query-title').textContent = `${q.id}. ${q.title}`;
+      $('#query-desc').textContent = q.description;
+      $('#query-table').innerHTML = table(await api('/queries/' + id));
+    }
+
+    // ---------------------------------------------------------------- activities
+    async function loadActivities() {
+      const f = new FormData($('#filter-form'));
+      const params = new URLSearchParams([...f].filter(([, v]) => v));
+      const rows = await api('/activities?' + params);
+      $('#activity-table').innerHTML = table(rows, '', (r) =>
+        `<button data-delete="${r.activity_id}" class="rounded border border-red-300 px-2 text-xs text-red-600">Delete</button>`);
+    }
+
+    $('#filter-form').addEventListener('submit', (e) => { e.preventDefault(); run(loadActivities); });
+
+    $('#activity-table').addEventListener('click', (e) => {
+      const id = e.target.dataset.delete;
+      if (!id || !confirm(`Delete activity #${id}?`)) return;
+      run(async () => { say((await api('/activities/' + id, 'DELETE')).message); await loadActivities(); });
+    });
+
+    // Gear and device dropdowns depend on the chosen athlete.
+    async function loadChoices(form) {
+      const athleteId = form.elements.athlete_id.value;
+      const [gear, devices] = athleteId ? await Promise.all([api('/gear?athlete_id=' + athleteId), api('/devices?athlete_id=' + athleteId)]) : [[], []];
+      fill(form.elements.gear_id, gear.filter((g) => !g.is_retired), 'gear_id', 'name', 'No gear');
+      fill(form.elements.device_id, devices, 'device_id', 'device_name', 'No device');
+    }
+    for (const id of ['add-form', 'result-form']) {
+      const form = $('#' + id);
+      form.elements.athlete_id.addEventListener('change', () => run(() => loadChoices(form)));
+    }
+
+    // Both forms post their fields as JSON.
+    function submitForm(formId, path, after) {
+      $('#' + formId).addEventListener('submit', (e) => {
+        e.preventDefault();
+        const form = e.target;
+        run(async () => {
+          const result = await api(path, 'POST', Object.fromEntries(new FormData(form)));
+          say(result.message);
+          form.reset();
+          await loadChoices(form);
+          await after();
+        });
+      });
+    }
+    submitForm('add-form', '/activities', loadActivities);
+    submitForm('result-form', '/event-results', loadActivities);
+
+    // ---------------------------------------------------------------------- gear
+    async function loadGear() {
+      const id = $('#gear-athlete').value;
+      if (!id) { $('#gear-table').innerHTML = ''; return; }
+      const gear = await api('/gear?athlete_id=' + id);
+      $('#gear-table').innerHTML = table(gear, '', (g) =>
+        g.is_retired ? 'retired' : `<button data-retire="${g.gear_id}" class="rounded border px-2 text-xs">Retire</button>`);
+    }
+    $('#gear-athlete').addEventListener('change', () => run(loadGear));
+    $('#gear-table').addEventListener('click', (e) => {
+      const id = e.target.dataset.retire;
+      if (!id) return;
+      run(async () => { say((await api(`/gear/${id}/retire`, 'POST')).message); await loadGear(); });
+    });
+
+    // ---------------------------------------------------------------------- start
+    const state = { queries: [] };
+    run(async () => {
+      const athletes = await api('/athletes');
+      document.querySelectorAll('.athlete-select').forEach((s) => {
+        const blank = s.dataset.any ?? 'Choose athlete…';
+        fill(s, athletes, 'athlete_id', 'name', blank);
+      });
+      fill($('#event-select'), (await api('/events')).map((e) => ({ ...e, label: `${e.name} (${e.event_date})` })), 'event_id', 'label', 'Choose event…');
+
+      state.queries = await api('/queries');
+      $('#query-buttons').innerHTML = state.queries.map((q) =>
+        `<button data-query="${q.id}" class="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-emerald-50">${q.id}. ${esc(q.title)}</button>`).join('');
+      $('#query-buttons').addEventListener('click', (e) => { if (e.target.dataset.query) run(() => loadQuery(Number(e.target.dataset.query))); });
+
+      await loadQuery(1);
+      await loadActivities();
+    });
+  </script>
+</body>
+</html>
